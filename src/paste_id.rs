@@ -1,7 +1,8 @@
+use rocket::request::FromParam;
 use std::borrow::Cow;
 use std::fmt;
 use std::fmt::Display;
-use rocket::request::FromParam;
+use std::path::{Path, PathBuf};
 
 use rand::{self, Rng};
 
@@ -25,6 +26,11 @@ impl<'a> PasteId<'a> {
 
         PasteId(Cow::Owned(id))
     }
+
+    pub fn file_path(&self) -> PathBuf {
+        let root = concat!(env!("CARGO_MANIFEST_DIR"), "/", "upload");
+        Path::new(root).join(self.0.as_ref())
+    }
 }
 
 impl<'a> Display for PasteId<'a> {
@@ -32,7 +38,6 @@ impl<'a> Display for PasteId<'a> {
         write!(f, "{}", self.0)
     }
 }
-
 
 /// Returns an instance of `PasteId` if the path segment is a valid ID.
 /// Otherwise returns the invalid ID as the `Err` value.
@@ -42,7 +47,7 @@ impl<'a> FromParam<'a> for PasteId<'a> {
     fn from_param(param: &'a str) -> Result<Self, Self::Error> {
         match param.chars().all(|c| c.is_ascii_alphanumeric()) {
             true => Ok(PasteId(Cow::Owned(param.into()))),
-            false => Err(param)
+            false => Err(param),
         }
     }
 }
