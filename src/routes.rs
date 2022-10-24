@@ -1,8 +1,17 @@
+use std::io::Error;
+
 use crate::paste_id::PasteId;
-use rocket::data::{Data, ToByteUnit};
-use rocket::http::Status;
-use rocket::response::Debug;
-use rocket::tokio::fs::{remove_file, File};
+use rocket::{
+    config::Config,
+    data::{Data, ToByteUnit},
+    delete, get,
+    http::Status,
+    post,
+    response::Debug,
+    routes,
+    tokio::fs::{remove_file, File},
+    Route,
+};
 use rocket_dyn_templates::Template;
 
 const ID_LENGTH: usize = 6;
@@ -14,13 +23,8 @@ pub fn index() -> Template {
 }
 
 #[post("/", data = "<paste>")]
-async fn upload(paste: Data<'_>) -> Result<(Status, String), Debug<std::io::Error>> {
+async fn upload(paste: Data<'_>) -> Result<(Status, String), Debug<Error>> {
     let id = PasteId::new(ID_LENGTH);
-    let url = format!(
-        "{host}/{id}",
-        host = "http://localhost:8000",
-        id = id.to_string()
-    );
 
     let data_stream = paste
         .open(MAX_FILE_SIZE.kibibytes())
@@ -31,7 +35,11 @@ async fn upload(paste: Data<'_>) -> Result<(Status, String), Debug<std::io::Erro
     } else {
         Status::PartialContent
     };
-    Ok((status_code, url))
+    let base_url: String = Config::figment()
+        .extract_inner("base_url")
+        .unwrap_or("http://localhost:8000".to_string());
+    let paste_uri = format!("{}/{}", base_url, id);
+    Ok((status_code, paste_uri))
 }
 
 #[get("/<id>")]
@@ -44,6 +52,6 @@ async fn delete_paste(id: PasteId<'_>) -> Option<()> {
     remove_file(id.file_path()).await.ok()
 }
 
-pub fn api_routes() -> Vec<rocket::Route> {
-    rocket::routes![index, upload, get_paste, delete_paste]
+pub fn api_routes() -> Vec<Route> {
+    routes![index, upload, get_paste, delete_paste]
 }
