@@ -12,14 +12,25 @@ use rocket::{
     tokio::fs::{remove_file, File},
     Route,
 };
-use rocket_dyn_templates::Template;
+use rocket_dyn_templates::{context, Template};
 
 const ID_LENGTH: usize = 6;
 const MAX_FILE_SIZE: i32 = 128;
 
+fn get_base_url() -> String {
+    Config::figment()
+        .extract_inner("base_url")
+        .unwrap_or("http://localhost:8000".to_string())
+}
+
 #[get("/")]
 pub fn index() -> Template {
-    Template::render("index", "{}")
+    Template::render(
+        "index",
+        context! {
+            base_url: get_base_url()
+        },
+    )
 }
 
 #[post("/", data = "<paste>")]
@@ -35,10 +46,7 @@ async fn upload(paste: Data<'_>) -> Result<(Status, String), Debug<Error>> {
     } else {
         Status::PartialContent
     };
-    let base_url: String = Config::figment()
-        .extract_inner("base_url")
-        .unwrap_or("http://localhost:8000".to_string());
-    let paste_uri = format!("{}/{}", base_url, id);
+    let paste_uri = format!("{}/{}", get_base_url(), id);
     Ok((status_code, paste_uri))
 }
 
