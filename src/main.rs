@@ -3,9 +3,11 @@ use rocket_dyn_templates::Template;
 
 mod paste_id;
 mod routes;
+#[cfg(test)]
+mod tests;
 
 #[launch]
-fn rocket() -> _ {
+pub fn launch_rocket() -> _ {
     build()
         .mount("/", routes::api_routes())
         .attach(Template::fairing())

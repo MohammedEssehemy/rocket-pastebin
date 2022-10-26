@@ -1,8 +1,14 @@
-use rocket::request::FromParam;
+use rocket::{
+    http::{
+        impl_from_uri_param_identity,
+        uri::fmt::{Formatter, Path, UriDisplay},
+    },
+    request::FromParam,
+};
 use std::borrow::Cow;
 use std::fmt;
 use std::fmt::Display;
-use std::path::{Path, PathBuf};
+use std::path::{Path as FilePath, PathBuf};
 
 use rand::{self, Rng};
 
@@ -29,7 +35,7 @@ impl<'a> PasteId<'a> {
 
     pub fn file_path(&self) -> PathBuf {
         let root = concat!(env!("CARGO_MANIFEST_DIR"), "/", "upload");
-        Path::new(root).join(self.0.as_ref())
+        FilePath::new(root).join(self.0.as_ref())
     }
 }
 
@@ -51,3 +57,11 @@ impl<'a> FromParam<'a> for PasteId<'a> {
         }
     }
 }
+
+impl UriDisplay<Path> for PasteId<'_> {
+    fn fmt(&self, f: &mut Formatter<'_, Path>) -> fmt::Result {
+        UriDisplay::fmt(self.0.as_ref(), f)
+    }
+}
+
+impl_from_uri_param_identity!([Path] ('a) PasteId<'a>);

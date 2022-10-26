@@ -34,7 +34,7 @@ pub fn index() -> Template {
 }
 
 #[post("/", data = "<paste>")]
-async fn upload(paste: Data<'_>) -> Result<(Status, String), Debug<Error>> {
+pub async fn upload(paste: Data<'_>) -> Result<(Status, String), Debug<Error>> {
     let id = PasteId::new(ID_LENGTH);
 
     let data_stream = paste
@@ -51,12 +51,12 @@ async fn upload(paste: Data<'_>) -> Result<(Status, String), Debug<Error>> {
 }
 
 #[get("/<id>")]
-async fn get_paste(id: PasteId<'_>) -> Option<File> {
+pub async fn get_paste(id: PasteId<'_>) -> Option<File> {
     File::open(id.file_path()).await.ok()
 }
 
 #[delete("/<id>")]
-async fn delete_paste(id: PasteId<'_>) -> Option<()> {
+pub async fn delete_paste(id: PasteId<'_>) -> Option<()> {
     remove_file(id.file_path()).await.ok()
 }
 
