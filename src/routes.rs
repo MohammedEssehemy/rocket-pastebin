@@ -23,6 +23,11 @@ fn get_base_url() -> String {
         .unwrap_or("http://localhost:8000".to_string())
 }
 
+#[get("/healthz")]
+pub fn healthz() -> &'static str {
+    ""
+}
+
 #[get("/")]
 pub fn index() -> Template {
     Template::render(
@@ -61,5 +66,5 @@ pub async fn delete_paste(id: PasteId<'_>) -> Option<()> {
 }
 
 pub fn api_routes() -> Vec<Route> {
-    routes![index, upload, get_paste, delete_paste]
+    routes![index, upload, get_paste, delete_paste, healthz]
 }
