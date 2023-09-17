@@ -23,9 +23,9 @@ fn get_base_url() -> String {
         .unwrap_or("http://localhost:8000".to_string())
 }
 
-#[get("/healthz")]
-pub fn healthz() -> &'static str {
-    ""
+#[get("/favicon.ico")]
+pub async fn favicon() -> Option<File> {
+    File::open("./static/favicon.ico").await.ok()
 }
 
 #[get("/")]
@@ -66,5 +66,5 @@ pub async fn delete_paste(id: PasteId<'_>) -> Option<()> {
 }
 
 pub fn api_routes() -> Vec<Route> {
-    routes![index, upload, get_paste, delete_paste, healthz]
+    routes![index, favicon, upload, get_paste, delete_paste]
 }
